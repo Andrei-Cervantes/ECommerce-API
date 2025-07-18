@@ -1,21 +1,25 @@
-const express = require("express");
-const userController = require("../controllers/user");
-const { verify, isLoggedIn, verifyAdmin } = require("../auth");
+import express from "express";
+import userController from "../controllers/user.js";
+import auth from "../auth.js";
 const router = express.Router();
 
+const { verify, isLoggedIn, verifyAdmin } = auth();
+const { registerUser, loginUser, updatePassword, setUserAsAdmin, getProfile } =
+  userController();
+
 // Route for user registration
-router.post("/", userController.registerUser);
+router.post("/", registerUser);
 
 // Route for user authentication
-router.post("/login", userController.loginUser);
+router.post("/login", loginUser);
 
 // Route for updating password
-router.patch("/update-password", verify, userController.updatePassword);
+router.patch("/update-password", verify, updatePassword);
 
 // Set User as admin (Admin Only)
-router.patch("/:userId/set-as-admin", verify, verifyAdmin, userController.setUserAsAdmin);
+router.patch("/:userId/set-as-admin", verify, verifyAdmin, setUserAsAdmin);
 
 // Retrieve User Details
-router.get("/details", verify, userController.getProfile);
+router.get("/details", verify, getProfile);
 
-module.exports = router;
+export default router;

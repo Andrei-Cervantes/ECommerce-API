@@ -1,15 +1,18 @@
-const express = require("express");
-const orderController = require("../controllers/order");
-const { verify, verifyAdmin } = require("../auth");
+import express from "express";
+import orderController from "../controllers/order.js";
+import auth from "../auth.js";
 const router = express.Router();
 
+const { verify, verifyAdmin } = auth();
+const { checkout, getUserOrders, getAllOrders } = orderController();
+
 // Route for non-admin user checkout (create order)
-router.post("/checkout", verify, orderController.checkout);
+router.post("/checkout", verify, checkout);
 
 // Route for retrieving authenticated user's orders
-router.get("/my-orders", verify, orderController.getUserOrders);
+router.get("/my-orders", verify, getUserOrders);
 
 // Route for retrieving all orders (admin only)
-router.get("/all-orders", verify, verifyAdmin, orderController.getAllOrders);
+router.get("/all-orders", verify, verifyAdmin, getAllOrders);
 
-module.exports = router;
+export default router;
