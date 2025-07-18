@@ -1,52 +1,63 @@
-# Capstone 2 Demo App Overview:
-## Application Name: Demo-App
-## Team Members:
-- **Cerl Francis Balansag**
-- **Andrei Christopher Cervantes**
-## User Credentials
-- Admin User
-  - email: **admin@gmail.com**
-  - password: **admin123**
-- Dummy Customer
-  - email: **testuser1@gmail.com**
-  - password: **testuser1**
+# ECommerce API Documentation
 
-## Features:
-## Features by Cerl Francis Balansag
-User Resources:
-- Retrieve User Details
-- Set user as admin (Admin only)
-Product Resources:
-- Retrieve all products
-- Retrieve all active products
-- Retrieve single product
-- Search Functionality:
-  - Add search for products by their name
-Cart Resources:
-- Get user's cart
-- Change product quantities
-- Clear Cart Items
-Order Resources:
-- Retrieve all orders (Admin only)
-- Retrieve authenticated user's orders
+## 🔐 User Credentials
 
-## Features by Andrei Christopher Cervantes
-User Resources:
-- Data Model Design
-- User Registration
-- User Authentication
-- Update Password
-Product Resources:
-- Create Product (Admin only)
-- Update Product information (Admin only)
-- Archive product (Admin only)
-- Activate Product (Admin only)
-- Search Functionality:
-  - Add search for products by their name
-Cart Resources:
-- Add to Cart
-  - Subtotal for each item
-  - Total price for all items
-- Remove products from cart
-Order Resources:
-- Non-admin User checkout (Create Order)
+**Test accounts for API exploration:**
+
+- **Admin User** (Full access privileges)
+  - Email: admin@gmail.com
+  - Password: admin123
+- **Standard User** (Customer permissions)
+  - Email: testuser1@gmail.com
+  - Password: testuser1
+
+## 🚀 Core Features
+
+### 📦 Product Catalog
+
+- **Product Operations**
+  - List all products
+  - Get active products
+  - View product details
+  - Search products by name
+- **Admin-Exclusive Actions**
+  - Create new products
+  - Update product information
+  - Archive/deactivate products
+  - Reactivate products
+
+### 👥 User Management
+
+- **Authentication**
+  - User registration
+  - JWT-based authentication
+  - Password updates
+- **Profile Operations**
+  - View user details
+  - Admin privilege escalation (Admin-only)
+
+### 🛒 Cart System
+
+- **Cart Management**
+  - View user's cart
+  - Add/remove products
+  - Modify quantities
+  - Clear entire cart
+- **Pricing Calculations**
+  - Per-item subtotals
+  - Total cart amount
+
+### 📦 Order Processing
+
+- **Order Operations**
+  - Create orders (Customer checkout)
+  - View personal order history
+- **Admin Functions**
+  - View all user orders
+  - Order status management
+
+## 🔒 Access Control
+
+- Admin-restricted endpoints marked with (Admin)
+- Role-based access control system
+- JWT authentication for protected routes
