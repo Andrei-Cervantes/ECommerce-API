@@ -4,6 +4,9 @@ import mongoose from "mongoose";
 import cors from "cors";
 dotenv.config();
 
+import swaggerUI from "swagger-ui-express";
+import swaggerJSDoc from "swagger-jsdoc";
+
 import userRoutes from "./routes/user.js";
 import orderRoutes from "./routes/order.js";
 import productRoutes from "./routes/product.js";
@@ -28,6 +31,18 @@ app.use("/users", userRoutes);
 app.use("/orders", orderRoutes);
 app.use("/products", productRoutes);
 app.use("/cart", cartRoutes);
+
+// Swagger Documentation
+const options = {
+  definition: {
+    openapi: "3.0.0",
+    info: { title: "API Documentation", version: "1.0.0" },
+  },
+  apis: ["./routes/*.js"],
+};
+
+const swaggerSpec = swaggerJSDoc(options);
+app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(swaggerSpec));
 
 if (import.meta.url === new URL(import.meta.url).href) {
   app.listen(process.env.PORT || port, () => {

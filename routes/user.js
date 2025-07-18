@@ -7,6 +7,16 @@ const { verify, isLoggedIn, verifyAdmin } = auth();
 const { registerUser, loginUser, updatePassword, setUserAsAdmin, getProfile } =
   userController();
 
+/**
+ * @swagger
+ * tags:
+ *   name: User
+ *   description: User management endpoints
+ * /users:
+ *   post:
+ *     summary: Register a new user
+ */
+
 // Route for user registration
 router.post("/", registerUser);
 
