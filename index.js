@@ -16,11 +16,14 @@ const port = 3007;
 const app = express();
 
 // MongoDB Connection
-mongoose.connect(process.env.MONGO_URI);
-
-let db = mongoose.connection;
-db.on("error", console.error.bind(console, "connection error"));
-db.once("open", () => console.log("Now connected to MongoDB Atlas"));
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log("Connected to MongoDB Atlas");
+  })
+  .catch((err) => {
+    console.log(err);
+  });
 
 app.use(cors());
 app.use(express.json());
