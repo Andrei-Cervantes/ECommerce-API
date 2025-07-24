@@ -16,32 +16,165 @@ const {
   searchByPrice,
 } = productController();
 
-// Route for creating product (admin only)
+/**
+ * @swagger
+ * /products:
+ *   post:
+ *     summary: Create a new product
+ *     tags: [Product]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       201:
+ *         description: Product created successfully
+ *       409:
+ *         description: Duplicate product found
+ *       500:
+ *         description: Server error
+ */
 router.post("/", verify, verifyAdmin, createProduct);
 
-// Route for retrieving all products (admin only)
+/**
+ *
+ * @swagger
+ * /products/all:
+ *   get:
+ *     summary: Get all products
+ *     tags: [Product]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: All products retrieved successfully
+ *       404:
+ *         description: No products found
+ *       500:
+ *         description: Server error
+ */
 router.get("/all", verify, verifyAdmin, getAllProducts);
 
-// Route for retrieving all active products
+/**
+ *
+ * @swagger
+ * /products:
+ *   get:
+ *     summary: Get all active products
+ *     tags: [Product]
+ *     responses:
+ *       200:
+ *         description: All active products retrieved successfully
+ *       404:
+ *         description: No active products found
+ *       500:
+ *         description: Server error
+ */
 router.get("/", getAllActiveProducts);
 
-// Route for retrieving single product
+/**
+ * @swagger
+ * /products/{productId}:
+ *   get:
+ *     summary: Get a single product
+ *     tags: [Product]
+ *     responses:
+ *       200:
+ *         description: Product retrieved successfully
+ *       404:
+ *         description: Product not found
+ *       500:
+ *         description: Server error
+ */
 router.get("/:productId", getProduct);
 
-// Route for updating product information (admin only)
+/**
+ *
+ * @swagger
+ * /products/{productId}/update:
+ *   patch:
+ *     summary: Update product information
+ *     tags: [Product]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Product updated successfully
+ *       404:
+ *         description: Product not found
+ *       500:
+ *         description: Server error
+ */
 router.patch("/:productId/update", verify, verifyAdmin, updateProduct);
 
-// Route for archiving product (admin only)
+/**
+ *
+ * @swagger
+ * /products/{productId}/archive:
+ *   patch:
+ *     summary: Archive product
+ *     tags: [Product]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Product archived successfully
+ *       404:
+ *         description: Product not found
+ *       500:
+ *         description: Server error
+ */
 router.patch("/:productId/archive", verify, verifyAdmin, archiveProduct);
 
-// Route for activating product (admin only)
+/**
+ *
+ * @swagger
+ * /products/{productId}/activate:
+ *   patch:
+ *     summary: Activate product
+ *     tags: [Product]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Product activated successfully
+ *       404:
+ *         description: Product not found
+ *       500:
+ *         description: Server error
+ */
 router.patch("/:productId/activate", verify, verifyAdmin, activateProduct);
 
-// Search Functionalities
-// Route for searching products by their names
+/**
+ *
+ * @swagger
+ * /products/searchByName:
+ *   post:
+ *     summary: Search products by name
+ *     tags: [Product]
+ *     responses:
+ *       200:
+ *         description: Products found successfully
+ *       404:
+ *         description: No products found
+ *       500:
+ *         description: Server error
+ */
 router.post("/searchByName", searchByName);
 
-// Route for searching products by price range
+/**
+ *
+ * @swagger
+ * /products/searchByPrice:
+ *   post:
+ *     summary: Search products by price range
+ *     tags: [Product]
+ *     responses:
+ *       200:
+ *         description: Products found successfully
+ *       404:
+ *         description: No products found
+ *       500:
+ *         description: Server error
+ */
 router.post("/searchByPrice", searchByPrice);
 
 export default router;

@@ -12,21 +12,94 @@ const {
   clearCart,
 } = cartController();
 
-// Route for getting user's cart
+/**
+ * @swagger
+ * /cart/get-cart:
+ *   get:
+ *     summary: Get user's cart
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Cart retrieved successfully
+ *       404:
+ *         description: Cart not found
+ *       500:
+ *         description: Server error
+ */
 router.get("/get-cart", verify, getUserCart);
 
-// Route for adding to cart
-// - subtotal for each item
-// - total price for all items
+/**
+ * @swagger
+ * /cart/add-to-cart:
+ *   post:
+ *     summary: Add to cart
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Item added to cart successfully
+ *       404:
+ *         description: Product not found
+ *       500:
+ *         description: Server error
+ */
 router.post("/add-to-cart", verify, addToCart);
 
-// Route for changing product quantities
+/**
+ * @swagger
+ * /cart/update-cart-quantity:
+ *   patch:
+ *     summary: Update cart quantity
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Cart quantity updated successfully
+ *       404:
+ *         description: Cart not found
+ *       500:
+ *         description: Server error
+ */
 router.patch("/update-cart-quantity", verify, updateCartQuantity);
 
-// Route for removing products from cart
+/**
+ * @swagger
+ * /cart/{productId}/remove-from-cart:
+ *   patch:
+ *     summary: Remove product from cart
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Product removed from cart successfully
+ *       404:
+ *         description: Cart not found
+ *       500:
+ *         description: Server error
+ */
 router.patch("/:productId/remove-from-cart", verify, removeFromCart);
 
-// Route for clearing cart
+/**
+ * @swagger
+ * /cart/clear-cart:
+ *   put:
+ *     summary: Clear cart
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Cart cleared successfully
+ *       404:
+ *         description: Cart not found
+ *       500:
+ *         description: Server error
+ */
 router.put("/clear-cart", verify, clearCart);
 
 export default router;

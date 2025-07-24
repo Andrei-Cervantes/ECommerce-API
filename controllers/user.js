@@ -29,9 +29,10 @@ const userController = () => {
 
           return newUser
             .save()
-            .then((result) =>
-              res.status(201).send({ message: "Registered Successfully" })
-            )
+            .then((result) => {
+              res.status(201).send({ message: "Registered Successfully" });
+              console.log(result);
+            })
             .catch((err) => {
               console.error("Error in saving: ", err);
               return res.status(500).send({ error: "Error in save" });
