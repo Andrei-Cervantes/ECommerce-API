@@ -12,8 +12,6 @@ const userController = () => {
         }
         if (!req.body.email.includes("@")) {
           return res.status(400).send({ error: "Email invalid" });
-        } else if (req.body.mobileNo.length !== 11) {
-          return res.status(400).send({ error: "Mobile number invalid " });
         } else if (req.body.password.length < 8) {
           return res
             .status(400)
@@ -23,7 +21,6 @@ const userController = () => {
             firstName: req.body.firstName,
             lastName: req.body.lastName,
             email: req.body.email,
-            mobileNo: req.body.mobileNo,
             password: bcrypt.hashSync(req.body.password, 10),
           });
 
@@ -55,7 +52,7 @@ const userController = () => {
           } else {
             const isPasswordCorrect = bcrypt.compareSync(
               req.body.password,
-              result.password
+              result.password,
             );
 
             if (isPasswordCorrect) {

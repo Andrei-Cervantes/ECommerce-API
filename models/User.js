@@ -21,10 +21,6 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
-  mobileNo: {
-    type: String,
-    required: [true, "Mobile Number is required"],
-  },
 });
 
 export default mongoose.model("User", userSchema);

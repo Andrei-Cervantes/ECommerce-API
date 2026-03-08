@@ -23,7 +23,6 @@ const { registerUser, loginUser, updatePassword, setUserAsAdmin, getProfile } =
  *               - firstName
  *               - lastName
  *               - email
- *               - mobileNo
  *               - password
  *             properties:
  *               firstName:
@@ -35,9 +34,6 @@ const { registerUser, loginUser, updatePassword, setUserAsAdmin, getProfile } =
  *               email:
  *                 type: string
  *                 example: john@example.com
- *               mobileNo:
- *                 type: string
- *                 example: 09012345678
  *               password:
  *                 type: string
  *                 example: password123
