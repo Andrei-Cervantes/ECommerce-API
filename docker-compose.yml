@@ -1,0 +1,29 @@
+version: "3.8"
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: ecommerce-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: ecommerce
+    volumes:
+      - mongo_data:/data/db
+
+  api:
+    build: .
+    container_name: ecommerce-api
+    ports:
+      - "3007:3007"
+    environment:
+      MONGO_URI: mongodb://mongodb:27017/ecommerce
+      PORT: 3007
+    depends_on:
+      - mongodb
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+volumes:
+  mongo_data:
