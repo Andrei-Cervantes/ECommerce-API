@@ -3,7 +3,7 @@ import userController from "../controllers/user.js";
 import auth from "../auth.js";
 const router = express.Router();
 
-const { verify, isLoggedIn, verifyAdmin } = auth();
+const { verify, verifyAdmin } = auth();
 const { registerUser, loginUser, updatePassword, setUserAsAdmin, getProfile } =
   userController();
 
