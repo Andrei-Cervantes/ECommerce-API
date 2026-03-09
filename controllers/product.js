@@ -165,9 +165,9 @@ const productController = () => {
   // Search Functionalities
   // Controller for searching products by their names
   const searchByName = async (req, res) => {
+    const { productName } = req.query;
+    console.log("Searching for product with name: ", productName);
     try {
-      const { productName } = req.body;
-
       // Use a regular expression to perform a case-insensitive search
       const products = await Product.find({
         name: { $regex: productName, $options: "i" },
@@ -188,7 +188,7 @@ const productController = () => {
 
   // Controller for searching products by price range
   const searchByPrice = async (req, res) => {
-    const { minPrice, maxPrice } = req.body;
+    const { minPrice, maxPrice } = req.query;
 
     try {
       // Validate input

@@ -71,6 +71,40 @@ router.get("/all", verify, verifyAdmin, getAllProducts);
 router.get("/", getAllActiveProducts);
 
 /**
+ *
+ * @swagger
+ * /products/searchByName:
+ *   post:
+ *     summary: Search products by name
+ *     tags: [Product]
+ *     responses:
+ *       200:
+ *         description: Products found successfully
+ *       404:
+ *         description: No products found
+ *       500:
+ *         description: Server error
+ */
+router.get("/searchByName", searchByName);
+
+/**
+ *
+ * @swagger
+ * /products/searchByPrice:
+ *   post:
+ *     summary: Search products by price range
+ *     tags: [Product]
+ *     responses:
+ *       200:
+ *         description: Products found successfully
+ *       404:
+ *         description: No products found
+ *       500:
+ *         description: Server error
+ */
+router.get("/searchByPrice", searchByPrice);
+
+/**
  * @swagger
  * /products/{productId}:
  *   get:
@@ -142,39 +176,5 @@ router.patch("/:productId/archive", verify, verifyAdmin, archiveProduct);
  *         description: Server error
  */
 router.patch("/:productId/activate", verify, verifyAdmin, activateProduct);
-
-/**
- *
- * @swagger
- * /products/searchByName:
- *   post:
- *     summary: Search products by name
- *     tags: [Product]
- *     responses:
- *       200:
- *         description: Products found successfully
- *       404:
- *         description: No products found
- *       500:
- *         description: Server error
- */
-router.post("/searchByName", searchByName);
-
-/**
- *
- * @swagger
- * /products/searchByPrice:
- *   post:
- *     summary: Search products by price range
- *     tags: [Product]
- *     responses:
- *       200:
- *         description: Products found successfully
- *       404:
- *         description: No products found
- *       500:
- *         description: Server error
- */
-router.post("/searchByPrice", searchByPrice);
 
 export default router;
