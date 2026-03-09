@@ -20,7 +20,7 @@ const {
  * @swagger
  * /products:
  *   post:
- *     summary: Create a new product
+ *     summary: Create a new product (Admin only)
  *     tags: [Product]
  *     security:
  *       - bearerAuth: []
@@ -39,7 +39,7 @@ router.post("/", verify, verifyAdmin, createProduct);
  * @swagger
  * /products/all:
  *   get:
- *     summary: Get all products
+ *     summary: Get all products (Admin only)
  *     tags: [Product]
  *     security:
  *       - bearerAuth: []
@@ -91,7 +91,7 @@ router.get("/:productId", getProduct);
  * @swagger
  * /products/{productId}/update:
  *   patch:
- *     summary: Update product information
+ *     summary: Update product information (Admin only)
  *     tags: [Product]
  *     security:
  *       - bearerAuth: []
@@ -110,7 +110,7 @@ router.patch("/:productId/update", verify, verifyAdmin, updateProduct);
  * @swagger
  * /products/{productId}/archive:
  *   patch:
- *     summary: Archive product
+ *     summary: Archive product (Admin only)
  *     tags: [Product]
  *     security:
  *       - bearerAuth: []
@@ -129,7 +129,7 @@ router.patch("/:productId/archive", verify, verifyAdmin, archiveProduct);
  * @swagger
  * /products/{productId}/activate:
  *   patch:
- *     summary: Activate product
+ *     summary: Activate product (Admin only)
  *     tags: [Product]
  *     security:
  *       - bearerAuth: []
