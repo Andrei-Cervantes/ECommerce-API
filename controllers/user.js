@@ -56,9 +56,16 @@ const userController = () => {
             );
 
             if (isPasswordCorrect) {
-              return res
-                .status(200)
-                .send({ accessToken: auth.createAccessToken(result) });
+              return res.status(200).send({
+                accessToken: auth().createAccessToken(result),
+                user: {
+                  id: result._id,
+                  email: result.email,
+                  firstName: result.firstName,
+                  lastName: result.lastName,
+                  isAdmin: result.isAdmin,
+                },
+              });
             } else {
               return res
                 .status(401)
