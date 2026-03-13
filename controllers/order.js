@@ -1,94 +1,69 @@
 import Order from "../models/Order.js";
 import Cart from "../models/Cart.js";
 
+// Helpers
+
+const isAdmin = (req) => req.user?.isAdmin;
+
+const adminGuard = (res) =>
+  res.status(403).json({ error: "Forbidden: admin access required" });
+
+// Controller
+
 const orderController = () => {
-  // Controller for non-admin user checkout (create order)
+  // POST /orders/checkout
   const checkout = async (req, res) => {
     try {
-      const userId = req.user.id;
-
-      let cart = await Cart.findOne({ userId });
+      const cart = await Cart.findOne({ userId: req.user.id });
 
       if (!cart) {
-        return res
-          .status(404)
-          .send({ message: "Cart not found for current user" });
+        return res.status(404).json({ error: "Cart not found" });
       }
 
-      if (cart.cartItems.length > 0) {
-        // Create a new Order document
-        let newOrder = new Order({
-          userId: userId,
-          productsOrdered: cart.cartItems,
-          totalPrice: cart.totalPrice,
-        });
-
-        await newOrder.save();
-
-        cart.cartItems = [];
-        cart.totalPrice = 0;
-
-        await cart.save();
-
-        return res.send({
-          message: "Order created successfully",
-          order: newOrder,
-          updatedCart: cart,
-        });
-      } else {
-        return res.status(409).send({ message: "CartItems is empty" });
+      if (cart.cartItems.length === 0) {
+        return res.status(400).json({ error: "Cart is empty" });
       }
-    } catch (error) {
-      console.error("Error: ", error);
-      res.status(500).send({ error: "Internal Server Error" });
+
+      const order = await Order.create({
+        userId: req.user.id,
+        productsOrdered: cart.cartItems,
+        totalPrice: cart.totalPrice,
+      });
+
+      cart.cartItems = [];
+      cart.totalPrice = 0;
+      await cart.save();
+
+      return res
+        .status(201)
+        .json({ message: "Order created successfully", order });
+    } catch (err) {
+      console.error("[checkout]", err);
+      return res.status(500).json({ error: "Internal server error" });
     }
   };
 
-  // Controller for retrieving authenticated user's orders
+  // GET /orders/my-orders
   const getUserOrders = async (req, res) => {
     try {
-      const userId = req.user.id;
-
-      const orders = await Order.find({ userId });
-
-      if (orders.length > 0) {
-        return res.send({
-          message: "User orders retrieved successfully",
-          orders: orders,
-        });
-      } else {
-        return res
-          .status(404)
-          .send({ message: "No orders found for the current user" });
-      }
-    } catch (error) {
-      console.error("Error: ", error);
-      res.status(500).send({ error: "Internal Server Error" });
+      const orders = await Order.find({ userId: req.user.id });
+      return res.status(200).json(orders);
+    } catch (err) {
+      console.error("[getUserOrders]", err);
+      return res.status(500).json({ error: "Internal server error" });
     }
   };
 
-  // Controller for retrieving all orders (admin only)
+  // GET /orders
   const getAllOrders = async (req, res) => {
+    if (!isAdmin(req)) return adminGuard(res);
+
     try {
-      if (!req.user.isAdmin) {
-        return res.status(403).send({
-          message: "Forbidden: You are not authorized to access this resource",
-        });
-      }
-
-      const allOrders = await Order.find();
-
-      if (allOrders.length > 0) {
-        return res.send({
-          message: "All orders retrieved successfully",
-          orders: allOrders,
-        });
-      } else {
-        return res.status(404).send({ message: "No orders found" });
-      }
-    } catch (error) {
-      console.error("Error: ", error);
-      res.status(500).send({ error: "Internal Server Error" });
+      const orders = await Order.find();
+      return res.status(200).json(orders);
+    } catch (err) {
+      console.error("[getAllOrders]", err);
+      return res.status(500).json({ error: "Internal server error" });
     }
   };
 

@@ -1,219 +1,223 @@
 import Product from "../models/Product.js";
 
+// Helpers
+
+const isAdmin = (req) => req.user?.isAdmin;
+
+const adminGuard = (res) => {
+  res.status(403).json({ error: "Forbidden: admin access required" });
+};
+
+// Controller
+
 const productController = () => {
-  // Controller for creating product (admin only)
+  // POST /products
   const createProduct = async (req, res) => {
-    // const { name, description, price } = req.body;
+    if (!isAdmin(req)) return adminGuard(res);
 
-    try {
-      if (!req.user.isAdmin) {
-        return res.status(403).send({ error: "Admin access only." });
-      }
-
-      const duplicateProduct = await Product.findOne({ name: req.body.name });
-      if (duplicateProduct) {
-        return res.status(409).send({
-          error: "Duplicate Product Found",
-          duplicateProduct: duplicateProduct,
-        });
-      }
-
-      const newProduct = new Product({
-        name: req.body.name,
-        description: req.body.description,
-        price: req.body.price,
-      });
-
-      const createdProduct = await newProduct.save();
-      return res.status(201).send({
-        message: "Product created successfully",
-        createdProduct: createdProduct,
-      });
-    } catch (error) {
-      console.error("Error in creating a product: ", error);
-      return res.status(500).send({ error: "Failed to create product" });
-    }
-  };
-
-  // Controller for retrieving all products (admin only)
-  const getAllProducts = async (req, res) => {
-    try {
-      const products = await Product.find();
-      if (products.length === 0) {
-        return res.status(404).send({ message: "No products found" });
-      }
-      res.send(products);
-    } catch (error) {
-      res.status(500).send({ error: "Internal Server Error" });
-    }
-  };
-
-  // Controller for retrieving single product
-  const getProduct = async (req, res) => {
-    try {
-      const productId = req.params.productId;
-      const product = await Product.findById(productId);
-      if (!product) {
-        return res.status(404).send({ error: "Product not found" });
-      }
-      res.send(product);
-    } catch (error) {
-      console.error("Error: ", error);
-      res.status(500).send({ error: "Internal Server Error" });
-    }
-  };
-
-  // Controller for retrieving all active products
-  const getAllActiveProducts = async (req, res) => {
-    try {
-      const activeProducts = await Product.find({ isActive: true });
-      if (activeProducts.length === 0) {
-        return res.status(404).send({ message: "No products found" });
-      }
-      res.send(activeProducts);
-    } catch (error) {
-      console.error("Error: ", error);
-      res.status(500).send({ error: "Internal Server Error" });
-    }
-  };
-
-  // Controller for updating product information (admin only)
-  const updateProduct = (req, res) => {
     const { name, description, price } = req.body;
 
-    if (req.user.isAdmin) {
-      return Product.findByIdAndUpdate(req.params.productId, {
-        name: name,
-        description: description,
-        price: price,
-      })
-        .then((updatedProduct) => {
-          if (updatedProduct) {
-            res.status(200).send({
-              message: "Product updated successfully",
-              updatedProduct: updatedProduct,
-            });
-          } else {
-            res.status(404).send({ error: "Product not found" });
-          }
-        })
-        .catch((err) => {
-          console.error("Error in updating a product:", err);
-          return res
-            .status(500)
-            .send({ error: "Error in updating a product." });
-        });
-    } else {
-      return res.status(403).send({ error: "Admin access only." });
+    if (!name || !description || price == null) {
+      return res
+        .status(400)
+        .json({ error: "name, description, and price are required" });
+    }
+
+    if (typeof price !== "number" || price < 0) {
+      return res
+        .status(400)
+        .json({ error: "price must be a non-negative number" });
+    }
+
+    try {
+      const existing = await Product.findOne({ name });
+      if (existing) {
+        return res
+          .status(409)
+          .json({ error: "A product with that name already exists" });
+      }
+
+      const product = await Product.create({ name, description, price });
+      return res
+        .status(201)
+        .json({ message: "Product created successfully", product });
+    } catch (err) {
+      console.error("[createProduct]", err);
+      return res.status(500).json({ error: "Internal server error" });
     }
   };
 
-  // Controller for archiving product (admin only)
-  const archiveProduct = (req, res) => {
-    if (req.user.isAdmin) {
-      return Product.findByIdAndUpdate(req.params.productId, {
-        isActive: false,
-      })
-        .then((archiveProduct) => {
-          if (archiveProduct) {
-            res.status(200).send({
-              message: "Product archived successfully",
-              archiveProduct: {
-                name: archiveProduct.name,
-                isActive: archiveProduct.isActive,
-              },
-            });
-          } else {
-            res.status(400).send({ error: "Product not found" });
-          }
-        })
-        .catch((err) => {
-          console.error("Error in archiving a product: ", err);
-          return res.status(500).send({ error: "Failed to archive product" });
-        });
-    } else {
-      return res.status(403).send({ error: "Admin access only." });
+  // GET /products/all
+  const getAllProducts = async (req, res) => {
+    if (!isAdmin(req)) return adminGuard(res);
+
+    try {
+      const products = await Product.find();
+      return res.status(200).json(products);
+    } catch (err) {
+      console.error("[getAllProducts]", err);
+      return res.status(500).json({ error: "Internal server error" });
     }
   };
 
-  // Controller for activating product (admin only)
-  const activateProduct = (req, res) => {
-    if (req.user.isAdmin) {
-      return Product.findByIdAndUpdate(req.params.productId, { isActive: true })
-        .then((activatedProduct) => {
-          if (activatedProduct) {
-            res.status(200).send({
-              message: "Product activated successfully",
-              activatedProduct: {
-                name: activatedProduct.name,
-                isActive: activatedProduct.isActive,
-              },
-            });
-          } else {
-            res.status(400).send({ error: "Product not found" });
-          }
-        })
-        .catch((err) => {
-          console.error("Error in activating a product: ", err);
-          return res.status(500).send({ error: "Failed to activate product" });
-        });
-    } else {
-      return res.status(403).send({ error: "Admin access only." });
+  // GET /products/:productId
+  const getProduct = async (req, res) => {
+    try {
+      const product = await Product.findById(req.params.productId);
+      if (!product) {
+        return res.status(404).json({ error: "Product not found" });
+      }
+      return res.status(200).json(product);
+    } catch (err) {
+      console.error("[getProduct]", err);
+      return res.status(500).json({ error: "Internal server error" });
     }
   };
 
-  // Search Functionalities
-  // Controller for searching products by their names
+  // GET /products
+  const getAllActiveProducts = async (req, res) => {
+    try {
+      const products = await Product.find({ isActive: true });
+      return res.status(200).json(products);
+    } catch (err) {
+      console.error("[getAllActiveProducts]", err);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  };
+
+  // PATCH /products/:productId
+  const updateProduct = async (req, res) => {
+    if (!isAdmin(req)) return adminGuard(res);
+
+    const { name, description, price } = req.body;
+
+    if (price != null && (typeof price !== "number" || price < 0)) {
+      return res
+        .status(400)
+        .json({ error: "price must be a non-negative number" });
+    }
+
+    try {
+      const product = await Product.findByIdAndUpdate(
+        req.params.productId,
+        {
+          ...(name && { name }),
+          ...(description && { description }),
+          ...(price != null && { price }),
+        },
+        { new: true, runValidators: true },
+      );
+
+      if (!product) {
+        return res.status(404).json({ error: "Product not found" });
+      }
+
+      return res
+        .status(200)
+        .json({ message: "Product updated successfully", product });
+    } catch (err) {
+      console.error("[updateProduct]", err);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  };
+
+  // PATCH /products/:productId/archive
+  const archiveProduct = async (req, res) => {
+    if (!isAdmin(req)) return adminGuard(res);
+
+    try {
+      const product = await Product.findByIdAndUpdate(
+        req.params.productId,
+        { isActive: false },
+        { new: true },
+      );
+
+      if (!product) {
+        return res.status(404).json({ error: "Product not found" });
+      }
+
+      return res
+        .status(200)
+        .json({ message: "Product archived successfully", product });
+    } catch (err) {
+      console.error("[archiveProduct]", err);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  };
+
+  // PATCH /products/:productId/activate
+  const activateProduct = async (req, res) => {
+    if (!isAdmin(req)) return adminGuard(res);
+
+    try {
+      const product = await Product.findByIdAndUpdate(
+        req.params.productId,
+        { isActive: true },
+        { new: true },
+      );
+
+      if (!product) {
+        return res.status(404).json({ error: "Product not found" });
+      }
+
+      return res
+        .status(200)
+        .json({ message: "Product activated successfully", product });
+    } catch (err) {
+      console.error("[activateProduct]", err);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  };
+
+  // GET /products/search?productName=...
   const searchByName = async (req, res) => {
     const { productName } = req.query;
-    console.log("Searching for product with name: ", productName);
+
+    if (!productName || !productName.trim()) {
+      return res
+        .status(400)
+        .json({ error: "productName query parameter is required" });
+    }
+
     try {
-      // Use a regular expression to perform a case-insensitive search
       const products = await Product.find({
-        name: { $regex: productName, $options: "i" },
+        name: { $regex: productName.trim(), $options: "i" },
       });
 
-      if (products.length === 0) {
-        return res.status(404).json({
-          message: "No products found within the specified price range",
-        });
-      }
-
-      res.json(products);
-    } catch (error) {
-      console.error("Error: ", error);
-      res.status(500).json({ error: "Internal Server Error" });
+      return res.status(200).json(products);
+    } catch (err) {
+      console.error("[searchByName]", err);
+      return res.status(500).json({ error: "Internal server error" });
     }
   };
 
-  // Controller for searching products by price range
+  // GET /products/search?minPrice=...&maxPrice=...
   const searchByPrice = async (req, res) => {
-    const { minPrice, maxPrice } = req.query;
+    const min = parseFloat(req.query.minPrice);
+    const max = parseFloat(req.query.maxPrice);
+
+    if (isNaN(min) || isNaN(max)) {
+      return res
+        .status(400)
+        .json({ error: "minPrice and maxPrice must be valid numbers" });
+    }
+
+    if (min < 0 || max < 0) {
+      return res.status(400).json({ error: "Prices must be non-negative" });
+    }
+
+    if (min > max) {
+      return res
+        .status(400)
+        .json({ error: "minPrice must not exceed maxPrice" });
+    }
 
     try {
-      // Validate input
-      if (isNaN(minPrice) || isNaN(maxPrice) || minPrice < 0 || maxPrice < 0) {
-        return res.status(400).json({ error: "Invalid price range" });
-      }
-
-      if (minPrice > maxPrice) {
-        return res.status(400).json({ error: "Min must be greater than Max" });
-      }
-
-      const products = await Product.find({
-        price: { $gte: minPrice, $lte: maxPrice },
-      });
-
-      if (products.length === 0) {
-        return res.status(404).json({
-          message: "No products found within the specified price range",
-        });
-      }
-
-      res.json(products);
-    } catch (error) {
-      console.error("Error: ", error);
-      res.status(500).json({ error: "Internal Server Error" });
+      const products = await Product.find({ price: { $gte: min, $lte: max } });
+      return res.status(200).json(products);
+    } catch (err) {
+      console.error("[searchByPrice]", err);
+      return res.status(500).json({ error: "Internal server error" });
     }
   };
 

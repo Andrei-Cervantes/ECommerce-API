@@ -2,147 +2,161 @@ import User from "../models/User.js";
 import auth from "../auth.js";
 import bcrypt from "bcrypt";
 
+// Constants
+const SALT_ROUNDS = 10;
+const MIN_PASSWORD_LENGTH = 8;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const isValidEmail = (email) => EMAIL_REGEX.test(email);
+const isValidPassword = (password) =>
+  password && password.length >= MIN_PASSWORD_LENGTH;
+
 const userController = () => {
-  // Controller for user registration
-  const registerUser = (req, res) => {
-    User.findOne({ email: req.body.email })
-      .then((existingUser) => {
-        if (existingUser) {
-          return res.status(409).send({ error: "Email already exists" });
-        }
-        if (!req.body.email.includes("@")) {
-          return res.status(400).send({ error: "Email invalid" });
-        } else if (req.body.password.length < 8) {
-          return res
-            .status(400)
-            .send({ error: "Password must be atleast 8 characters" });
-        } else {
-          let newUser = new User({
-            firstName: req.body.firstName,
-            lastName: req.body.lastName,
-            email: req.body.email,
-            password: bcrypt.hashSync(req.body.password, 10),
-          });
+  // POST /auth/register
+  const registerUser = async (req, res) => {
+    const { firstName, lastName, email, password } = req.body;
 
-          return newUser
-            .save()
-            .then((result) => {
-              res.status(201).send({ message: "Registered Successfully" });
-              console.log(result);
-            })
-            .catch((err) => {
-              console.error("Error in saving: ", err);
-              return res.status(500).send({ error: "Error in save" });
-            });
-        }
-      })
-      .catch((err) => {
-        console.error("Error in finding users", err);
-        return res.status(500).send({ error: "Error in finding users" });
-      });
-  };
-
-  // Controller for user authentication
-  const loginUser = (req, res) => {
-    if (req.body.email.includes("@")) {
-      return User.findOne({ email: req.body.email })
-        .then((result) => {
-          if (result == null) {
-            return res.status(404).send({ error: "No Email Found" });
-          } else {
-            const isPasswordCorrect = bcrypt.compareSync(
-              req.body.password,
-              result.password,
-            );
-
-            if (isPasswordCorrect) {
-              return res.status(200).send({
-                accessToken: auth().createAccessToken(result),
-                user: {
-                  id: result._id,
-                  email: result.email,
-                  firstName: result.firstName,
-                  lastName: result.lastName,
-                  isAdmin: result.isAdmin,
-                },
-              });
-            } else {
-              return res
-                .status(401)
-                .send({ message: "Email and password do not match" });
-            }
-          }
-        })
-        .catch((err) => {
-          console.error("Error in find: ", err);
-          return res.status(500).send({ error: "Error in find" });
-        });
-    } else {
-      return res.status(400).send({ error: "Invalid Email" });
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ error: "Invalid email format" });
     }
-  };
 
-  const updatePassword = (req, res) => {
-    // Check if password length is more than 8 characters
-    if (!req.body.password || req.body.password.length < 8) {
+    if (!isValidPassword(password)) {
       return res
         .status(400)
-        .send({ error: "Password must be at least 8 characters" });
-    } else {
-      const newPassword = {
-        password: bcrypt.hashSync(req.body.password, 10),
-      };
-
-      return User.findByIdAndUpdate(req.user.id, newPassword)
-        .then((result) => {
-          res.status(200).send({ message: "Password updated successfully" });
-        })
-        .catch((err) => {
-          console.error("Error in updating password", err);
-          return res.status(500).send({ error: "Failed to update password" });
+        .json({
+          error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters`,
         });
+    }
+
+    try {
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(409).json({ error: "Email already in use" });
+      }
+
+      const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+      const newUser = new User({
+        firstName,
+        lastName,
+        email,
+        password: hashedPassword,
+      });
+      await newUser.save();
+
+      return res.status(201).json({ message: "Registered successfully" });
+    } catch (err) {
+      console.error("[registerUser]", err);
+      return res.status(500).json({ error: "Internal server error" });
     }
   };
 
-  // Code For Retrieve User Details
+  // POST /auth/login
+  const loginUser = async (req, res) => {
+    const { email, password } = req.body;
+
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ error: "Invalid email format" });
+    }
+
+    try {
+      const user = await User.findOne({ email });
+      if (!user) {
+        // Avoid leaking whether the email exists
+        return res.status(401).json({ error: "Invalid email or password" });
+      }
+
+      const isPasswordCorrect = await bcrypt.compare(password, user.password);
+      if (!isPasswordCorrect) {
+        return res.status(401).json({ error: "Invalid email or password" });
+      }
+
+      return res.status(200).json({
+        accessToken: auth().createAccessToken(user),
+        user: {
+          id: user._id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          isAdmin: user.isAdmin,
+        },
+      });
+    } catch (err) {
+      console.error("[loginUser]", err);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  };
+
+  // PATCH /users/password
+  const updatePassword = async (req, res) => {
+    const { password } = req.body;
+
+    if (!isValidPassword(password)) {
+      return res
+        .status(400)
+        .json({
+          error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters`,
+        });
+    }
+
+    try {
+      const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+      const updated = await User.findByIdAndUpdate(
+        req.user.id,
+        { password: hashedPassword },
+        { new: true },
+      );
+
+      if (!updated) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      return res.status(200).json({ message: "Password updated successfully" });
+    } catch (err) {
+      console.error("[updatePassword]", err);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  };
+
+  // GET /users/profile
   const getProfile = async (req, res) => {
     try {
-      const userId = req.user.id;
-      const user = await User.findById(userId);
+      const user = await User.findById(req.user.id).select("-password");
       if (!user) {
-        return res.status(404).send({ message: "User not found" });
+        return res.status(404).json({ error: "User not found" });
       }
-      user.password = "";
-      res.status(200).send(user);
-    } catch (error) {
-      console.error(error);
-      res.status(500).send({ message: "Server error" });
+
+      return res.status(200).json(user);
+    } catch (err) {
+      console.error("[getProfile]", err);
+      return res.status(500).json({ error: "Internal server error" });
     }
   };
 
-  // Code For Set User as Admin (Admin Only)
+  // PATCH /users/:userId/set-admin
   const setUserAsAdmin = async (req, res) => {
+    if (!req.user.isAdmin) {
+      return res
+        .status(403)
+        .json({ error: "Forbidden: admin access required" });
+    }
+
     try {
-      const userId = req.params.userId;
-      const user = await User.findById(userId);
+      const user = await User.findByIdAndUpdate(
+        req.params.userId,
+        { isAdmin: true },
+        { new: true },
+      );
+
       if (!user) {
-        return res.status(404).send({ message: "User not found" });
+        return res.status(404).json({ error: "User not found" });
       }
 
-      if (!req.user.isAdmin) {
-        return res.status(403).send({
-          message: "Permission denied. Only admins can set users as admins.",
-        });
-      }
-
-      user.isAdmin = true;
-      await user.save();
-      res
+      return res
         .status(200)
-        .send({ message: "User has been set as admin successfully" });
-    } catch (error) {
-      console.error(error);
-      res.status(500).send({ message: "Server error" });
+        .json({ message: "User promoted to admin successfully" });
+    } catch (err) {
+      console.error("[setUserAsAdmin]", err);
+      return res.status(500).json({ error: "Internal server error" });
     }
   };
 
